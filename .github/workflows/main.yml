@@ -1,14 +1,17 @@
-name: Terraform on EC2 (Self-Hosted)
+name: Terraform on Self-Hosted EC2
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   terraform:
-    name: Apply Terraform Infrastructure
     runs-on: self-hosted
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1  # or your preferred region
 
     steps:
       - name: Checkout Code
@@ -27,6 +30,3 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
-
-      - name: Output Results
-        run: terraform output
