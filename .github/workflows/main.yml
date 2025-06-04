@@ -1,0 +1,32 @@
+name: Terraform on EC2 (Self-Hosted)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    name: Apply Terraform Infrastructure
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+
+      - name: Output Results
+        run: terraform output
