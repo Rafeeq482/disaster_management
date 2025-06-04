@@ -1,5 +1,13 @@
 provider "aws" {
+  alias      = "source"
   region     = "ap-south-1"
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
+}
+
+provider "aws" {
+  alias      = "destination"
+  region     = "us-east-1"
   access_key = var.aws_access_key
   secret_key = var.aws_secret_key
 }
@@ -8,8 +16,17 @@ resource "random_id" "suffix" {
   byte_length = 4
 }
 
+resource "aws_ami_copy" "copied_ami" {
+  provider          = aws.destination
+  name              = "copied-ami-${timestamp()}"
+  description       = "AMI copied from ap-south-1"
+  source_ami_id     = var.ami_id
+  source_ami_region = "ap-south-1"
+}
+
 resource "aws_security_group" "ssh_access" {
-  name        = "allow-ssh-${random_id.suffix.hex}"  # Unique name using random suffix
+  provider    = aws.destination
+  name        = "allow-ssh-${random_id.suffix.hex}"
   description = "Allow SSH inbound traffic"
 
   ingress {
@@ -29,7 +46,8 @@ resource "aws_security_group" "ssh_access" {
 }
 
 resource "aws_instance" "web_server" {
-  ami                         = var.ami_id
+  provider                    = aws.destination
+  ami                         = aws_ami_copy.copied_ami.id
   instance_type               = "t2.micro"
   key_name                    = "newacc"
   vpc_security_group_ids      = [aws_security_group.ssh_access.id]
