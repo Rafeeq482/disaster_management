@@ -18,7 +18,7 @@ resource "random_id" "suffix" {
 
 resource "aws_ami_copy" "copied_ami" {
   provider          = aws.destination
-  name              = "copied-ami-${timestamp()}"
+  name              = "copied-ami-${formatdate("YYYYMMDDhhmmss", timestamp())}"
   description       = "AMI copied from ap-south-1"
   source_ami_id     = var.ami_id
   source_ami_region = "ap-south-1"
