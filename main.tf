@@ -54,7 +54,7 @@ resource "aws_instance" "web_server" {
   provider                    = aws.destination
   ami                         = aws_ami_copy.copied_ami.id
   instance_type               = "t2.micro"
-  key_name = aws_key_pair.default.key_name
+  key_name                    = "newacc"
   vpc_security_group_ids      = [aws_security_group.ssh_access.id]
   associate_public_ip_address = true
 
@@ -65,10 +65,4 @@ resource "aws_instance" "web_server" {
   }
 }
 
-
-resource "aws_key_pair" "default" { 
-  provider   = aws.destination
-  key_name   = "newacc"
-  public_key = file("C:/Users/Mohd Rafeeq/Downloads/newacc.pub")  # Replace with actual filename
-}
 
