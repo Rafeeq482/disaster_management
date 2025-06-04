@@ -4,15 +4,6 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
-resource "aws_instance" "web_server" {
-  ami           = var.ami_id
-  instance_type = "t2.micro"
-  key_name      = "newacc"  # <--- Add this line
-  tags = {
-    Name = "MyRecreatedEC2"
-  }
-}
-
 resource "aws_security_group" "ssh_access" {
   name        = "allow-ssh"
   description = "Allow SSH inbound traffic"
@@ -32,5 +23,16 @@ resource "aws_security_group" "ssh_access" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+resource "aws_instance" "web_server" {
+  ami           = var.ami_id
+  instance_type = "t2.micro"
+  key_name      = "newacc"
+  vpc_security_group_ids = [aws_security_group.ssh_access.id]
+  tags = {
+    Name = "MyRecreatedEC2"
+  }
+}
+
 
 
