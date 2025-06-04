@@ -24,6 +24,11 @@ resource "aws_ami_copy" "copied_ami" {
   source_ami_region = "ap-south-1"
 }
 
+resource "time_sleep" "wait_for_ami" {
+  depends_on      = [aws_ami_copy.copied_ami]
+  create_duration = "300s" # Wait for 5 minutes
+}
+
 resource "aws_security_group" "ssh_access" {
   provider    = aws.destination
   name        = "allow-ssh-${random_id.suffix.hex}"
@@ -52,6 +57,8 @@ resource "aws_instance" "web_server" {
   key_name                    = "newacc"
   vpc_security_group_ids      = [aws_security_group.ssh_access.id]
   associate_public_ip_address = true
+
+  depends_on = [time_sleep.wait_for_ami]
 
   tags = {
     Name = "MyRecreatedEC2"
