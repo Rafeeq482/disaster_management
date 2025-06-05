@@ -26,7 +26,7 @@ resource "aws_ami_copy" "copied_ami" {
 
 resource "time_sleep" "wait_for_ami" {
   depends_on      = [aws_ami_copy.copied_ami]
-  create_duration = "300s" # Wait for 5 minutes
+  create_duration = "200s" # Wait for about 3.3 minutes
 }
 
 resource "aws_security_group" "ssh_access" {
@@ -59,6 +59,15 @@ resource "aws_instance" "web_server" {
   associate_public_ip_address = true
 
   depends_on = [time_sleep.wait_for_ami]
+
+    user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              yum install -y httpd
+              systemctl start httpd
+              systemctl enable httpd
+              echo "This is the same AMI and Your data exists" > /var/www/html/index.html
+              EOF
 
   tags = {
     Name = "MyRecreatedEC2"
