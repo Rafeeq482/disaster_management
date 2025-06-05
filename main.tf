@@ -1,9 +1,21 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
+  }
+}
+
 # =====================
 # 0. Default AWS Provider (required)
 # =====================
-
 provider "aws" {
-  region = "ap-south-1"  # Default region; can be overridden if needed
+  region = "ap-south-1"
 }
 
 # =====================
@@ -27,7 +39,7 @@ provider "aws" {
 }
 
 # =====================
-# 2. Random Suffix for unique naming
+# 2. Random Suffix
 # =====================
 
 resource "random_id" "suffix" {
@@ -35,7 +47,7 @@ resource "random_id" "suffix" {
 }
 
 # =====================
-# 3. Fetch AMI Info by Filtering image-id (correct way)
+# 3. Fetch AMI Info and Snapshot ID
 # =====================
 
 data "aws_ami" "source_ami" {
@@ -46,25 +58,31 @@ data "aws_ami" "source_ami" {
     values = [var.ami_id]
   }
 
-  owners = ["self"]  # Or the source account ID if needed
+  owners = ["self"]
 }
 
 # =====================
-# 4. Share AMI Launch Permission with destination account
+# 4. Share AMI & Snapshot
 # =====================
 
+# Share AMI with destination account
 resource "aws_ami_launch_permission" "share_to_destination" {
   provider   = aws.source
   image_id   = var.ami_id
   account_id = var.destination_account_id
 }
 
-# Note: 
-# There is NO Terraform resource for sharing EBS snapshot permissions.
-# Sharing the AMI launch permission automatically shares snapshot permissions for snapshots owned by the AMI owner.
+# Share snapshot with destination account
+resource "aws_snapshot_create_volume_permission" "share_snapshot" {
+  provider    = aws.source
+  snapshot_id = data.aws_ami.source_ami.block_device_mappings[0].ebs.snapshot_id
+  account_id  = var.destination_account_id
+
+  depends_on = [aws_ami_launch_permission.share_to_destination]
+}
 
 # =====================
-# 5. Copy AMI into Destination Account
+# 5. Copy AMI to Destination Account
 # =====================
 
 resource "aws_ami_copy" "copied_ami" {
@@ -74,20 +92,23 @@ resource "aws_ami_copy" "copied_ami" {
   source_ami_id     = var.ami_id
   source_ami_region = "ap-south-1"
 
-  depends_on = [aws_ami_launch_permission.share_to_destination]
+  depends_on = [
+    aws_ami_launch_permission.share_to_destination,
+    aws_snapshot_create_volume_permission.share_snapshot
+  ]
 }
 
 # =====================
-# 6. Wait for AMI to be Available before launching EC2
+# 6. Wait for AMI to be Available
 # =====================
 
 resource "time_sleep" "wait_for_ami" {
   depends_on      = [aws_ami_copy.copied_ami]
-  create_duration = "200s"  # Adjust time as needed
+  create_duration = "200s"
 }
 
 # =====================
-# 7. Security Group in Destination Account
+# 7. Security Group in Destination
 # =====================
 
 resource "aws_security_group" "ssh_access" {
@@ -112,14 +133,14 @@ resource "aws_security_group" "ssh_access" {
 }
 
 # =====================
-# 8. Launch EC2 Instance in Destination Account
+# 8. Launch EC2 in Destination
 # =====================
 
 resource "aws_instance" "web_server" {
   provider                    = aws.destination
   ami                         = aws_ami_copy.copied_ami.id
   instance_type               = "t3.micro"
-  key_name                    = "newacc"  # Make sure this key exists in destination account/region
+  key_name                    = "newacc"  # ✅ Make sure this key exists in destination account & region
   vpc_security_group_ids      = [aws_security_group.ssh_access.id]
   associate_public_ip_address = true
 
