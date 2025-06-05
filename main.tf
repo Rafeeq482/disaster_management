@@ -33,7 +33,7 @@ provider "aws" {
 # Destination Account B Provider
 provider "aws" {
   alias      = "destination"
-  region     = "ap-south-2"
+  region     = "ap-south-1"
   access_key = var.destination_access_key
   secret_key = var.destination_secret_key
 }
