@@ -60,12 +60,12 @@ resource "aws_instance" "web_server" {
 
   depends_on = [time_sleep.wait_for_ami]
 
-    user_data = <<-EOF
+user_data = <<-EOF
               #!/bin/bash
-              yum update -y
-              yum install -y httpd
-              systemctl start httpd
-              systemctl enable httpd
+              apt-get update -y
+              apt-get install -y apache2
+              systemctl start apache2
+              systemctl enable apache2
               echo "This is the same AMI and Your data exists" > /var/www/html/index.html
               EOF
 
