@@ -76,14 +76,13 @@ resource "aws_ami_launch_permission" "share_to_destination" {
 resource "aws_snapshot_create_volume_permission" "share_snapshot" {
   provider    = aws.source
 
-  # Convert set to list to access snapshot_id safely
-  snapshot_id = to_list(data.aws_ami.source_ami.block_device_mappings)[0].ebs.snapshot_id
-  
+  snapshot_id = tolist(data.aws_ami.source_ami.block_device_mappings)[0].ebs.snapshot_id
+
   account_id  = var.destination_account_id
 
-  # Ensure AMI sharing happens first
   depends_on = [aws_ami_launch_permission.share_to_destination]
 }
+
 
 # =====================
 # 5. Copy AMI to Destination Account
