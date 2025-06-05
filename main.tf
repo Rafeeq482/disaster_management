@@ -29,13 +29,17 @@ resource "random_id" "suffix" {
 # =====================
 # 3. Fetch AMI Snapshot Info
 # =====================
-
 data "aws_ami" "source_ami" {
-  provider = aws.source
-  image_id   = var.ami_id
-  owners   = ["self"]
-}
+  provider    = aws.source
+  most_recent = true
 
+  filter {
+    name   = "name"
+    values = ["your-ami-name-pattern"]
+  }
+
+  owners = ["self"]
+}
 # =====================
 # 4. Share AMI & Snapshot
 # =====================
@@ -47,12 +51,11 @@ resource "aws_ami_launch_permission" "share_to_destination" {
   account_id = var.destination_account_id
 }
 
-# Share snapshot with destination account
-resource "aws_ebs_snapshot_permission" "share_snapshot" {
-  provider    = aws.source
-  snapshot_id = data.aws_ami.source_ami.block_device_mappings[0].ebs.snapshot_id
+resource "aws_snapshot_create_volume_permission" "share_snapshot" {
+  snapshot_id = "snap-0defda18b81433842"
   account_id  = var.destination_account_id
 }
+
 
 # =====================
 # 5. Copy AMI to Destination Account
