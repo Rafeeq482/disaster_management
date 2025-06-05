@@ -25,5 +25,7 @@ jobs:
           terraform apply -auto-approve \
             -var="ami_id=${{ secrets.TF_AMI_ID }}" \
             -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
-            -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+            -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}"\
+            -var="destination_access_key=${{ secrets.DEST_AWS_ACCESS_KEY }}" \
+            -var="destination_secret_key=${{ secrets.DEST_AWS_SECRET_KEY }}" \
             -var="destination_account_id=${{ secrets.TF_DESTINATION_ACCOUNT_ID }}"
