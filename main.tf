@@ -68,10 +68,6 @@ resource "aws_ami_copy" "copied_ami" {
   source_ami_id     = var.ami_id
   source_ami_region = "ap-south-1"
 
-  depends_on = [
-    aws_ami_launch_permission.share_to_destination,
-    aws_ebs_snapshot_permission.share_snapshot
-  ]
 }
 
 # =====================
