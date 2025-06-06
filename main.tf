@@ -142,7 +142,7 @@ resource "aws_security_group" "ssh_access" {
 resource "aws_instance" "web_server" {
   provider                    = aws.destination
   ami                         = aws_ami_copy.copied_ami.id
-  instance_type               = "t2.micro"
+  instance_type               = "t2.medium"
   key_name                    = "newacc"  # ✅ Make sure this key exists in destination account & region
   vpc_security_group_ids      = [aws_security_group.ssh_access.id]
   associate_public_ip_address = true
