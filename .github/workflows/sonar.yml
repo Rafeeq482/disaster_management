@@ -1,0 +1,38 @@
+name: SonarQube Code Scan
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  sonarqube:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: temurin
+        java-version: 17
+
+    - name: Cache Sonar packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+
+    - name: SonarQube Scan
+      run: |
+        curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+        unzip sonar-scanner.zip
+        mv sonar-scanner-* sonar-scanner
+        chmod +x sonar-scanner/bin/sonar-scanner
+        ./sonar-scanner/bin/sonar-scanner \
+          -Dsonar.projectKey=my-awesome-project \
+          -Dsonar.sources=. \
+          -Dsonar.host.url=http://65.1.94.15:9000 \
+          -Dsonar.login=squ_9419cd9b4b57960fbf68219b5e84287464fb7fd0
